@@ -3,7 +3,7 @@
 
 namespace smrt::detail
 {
-    Storage::Storage(void* object, void (*deleter)(void*)) : object_(object), ref_count_(1), deleter_(deleter) {}
+    Storage::Storage(void* object, void (*deleter)(void*)) noexcept : object_(object), ref_count_(1), deleter_(deleter) {}
     void Storage::IncCount() noexcept
     {
         ref_count_++;
