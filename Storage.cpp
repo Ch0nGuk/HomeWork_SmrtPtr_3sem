@@ -1,7 +1,7 @@
 #include "Storage.h"
 
 
-namespace smrt::detail
+namespace shrd::detail
 {
     Storage::Storage(void (*deleter)(Storage*)) noexcept : ref_count_(1), deleter_(deleter) {}
     void Storage::IncCount() noexcept
@@ -18,4 +18,4 @@ namespace smrt::detail
         }
     }
 
-} // namespace smrt::detail
+} // namespace shrd::detail

@@ -4,17 +4,17 @@
 #include <utility> // для std::forward
 
 
-namespace smrt
+namespace shrd
 {
-    template <class T> class SmrtPtr;
+    template <class T> class ShrdPtr;
 }
 
-namespace smrt::detail
+namespace shrd::detail
 {
 
     class Storage
     {
-    template <class T> friend class smrt::SmrtPtr;
+    template <class T> friend class shrd::ShrdPtr;
     public:
         Storage(void (*deleter)(Storage*)) noexcept  ; 
         ~Storage() = default;
@@ -48,4 +48,4 @@ namespace smrt::detail
         T object;
     };
 
-} // namespace smrt::detil
+} // namespace shrd::detil

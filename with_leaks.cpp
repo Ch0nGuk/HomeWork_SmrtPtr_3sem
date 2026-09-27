@@ -1,17 +1,17 @@
-#include "SmrtPtr.h"
+#include "ShrdPtr.h"
 
-using namespace smrt;
+using namespace shrd;
 
 struct Empty
 {
-    SmrtPtr<Empty> collegue;
+    ShrdPtr<Empty> collegue;
 };
 
 
 int main()
 {
-    SmrtPtr<Empty> A = MakeSmrtPtr<Empty>();
-    SmrtPtr<Empty> B = MakeSmrtPtr<Empty>();
+    ShrdPtr<Empty> A = MakeShrdPtr<Empty>();
+    ShrdPtr<Empty> B = MakeShrdPtr<Empty>();
 
     A->collegue = B;
     B->collegue = A;

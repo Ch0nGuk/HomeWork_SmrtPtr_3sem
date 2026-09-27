@@ -2,7 +2,7 @@
 #include <chrono>
 #include <memory> // для std::shared_ptr, только для сравнения
 
-#include "SmrtPtr.h"
+#include "ShrdPtr.h"
 
 using Clock = std::chrono::steady_clock;
 
@@ -16,7 +16,7 @@ int main()
 {
     long long sum = 0; // копим значения, чтобы оптимизатор не выбросил циклы
 
-    std::cout << "N,raw,smrt,shared_make,shared_new\n";
+    std::cout << "N,raw,shrd,shared_make,shared_new\n";
 
     for (long long n = 10; n <= 100000000; n *= 10)
     {
@@ -31,7 +31,7 @@ int main()
         Clock::time_point t2 = Clock::now();
         for (long long i = 0; i < n; i++)
         {
-            smrt::SmrtPtr<int> p = smrt::MakeSmrtPtr<int>(1);
+            shrd::ShrdPtr<int> p = shrd::MakeShrdPtr<int>(1);
             sum += *p;
         }
 
@@ -45,7 +45,7 @@ int main()
         Clock::time_point t4 = Clock::now();
         for (long long i = 0; i < n; i++)
         {
-            std::shared_ptr<int> p(new int(1)); // две аллокации, как у MakeSmrtPtr
+            std::shared_ptr<int> p(new int(1)); // две аллокации, как у MakeShrdPtr
             sum += *p;
         }
 

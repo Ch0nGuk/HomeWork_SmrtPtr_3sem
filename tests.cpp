@@ -1,7 +1,7 @@
 #include <iostream>
 #include <utility> // для std::move
 
-#include "SmrtPtr.h"
+#include "ShrdPtr.h"
 #include "tests.h"
 
 int failed = 0;
@@ -53,8 +53,8 @@ struct Circle : public Shape
 
 void TestCreate()
 {
-    smrt::SmrtPtr<Point> p1 = smrt::MakeSmrtPtr<Point>(1, 2);
-    smrt::SmrtPtr<Point> p2 = smrt::MakeSmrtPtr<Point>();
+    shrd::ShrdPtr<Point> p1 = shrd::MakeShrdPtr<Point>(1, 2);
+    shrd::ShrdPtr<Point> p2 = shrd::MakeShrdPtr<Point>();
 
     Check(p1->x_ == 1 && p1->y_ == 2, "Create Point(1, 2), test ->");
     Check((*p1).x_ == 1 && (*p1).y_ == 2, "Create Point(1, 2), test *");
@@ -64,7 +64,7 @@ void TestCreate()
 
 void TestNullptr()
 {
-    smrt::SmrtPtr<Point> ptr;
+    shrd::ShrdPtr<Point> ptr;
 
     Check((!ptr), "Nullptr");
 
@@ -108,8 +108,8 @@ void TestNullptr()
 
 void TestCopy()
 {
-    smrt::SmrtPtr<Point> p1 = smrt::MakeSmrtPtr<Point>(4, 5);
-    smrt::SmrtPtr<Point> p2 = p1;
+    shrd::ShrdPtr<Point> p1 = shrd::MakeShrdPtr<Point>(4, 5);
+    shrd::ShrdPtr<Point> p2 = p1;
 
     Check(p2->x_ == 4 && p2->y_ == 5, "Copy is the same as original");
 
@@ -117,39 +117,39 @@ void TestCopy()
     p2->y_ =  7;
     Check(p1->x_ == 2 && p1->y_ == 7, "Original change with copy");
 
-    smrt::SmrtPtr<int> empty;
-    smrt::SmrtPtr<int> empty_copy = empty;
+    shrd::ShrdPtr<int> empty;
+    shrd::ShrdPtr<int> empty_copy = empty;
     Check(!empty_copy, "Copy of the empty is empty");   
 }
 
 void TestMove()
 {
-    smrt::SmrtPtr<int> p1 = smrt::MakeSmrtPtr<int>(5);
-    smrt::SmrtPtr<int> p2 = std::move(p1);
+    shrd::ShrdPtr<int> p1 = shrd::MakeShrdPtr<int>(5);
+    shrd::ShrdPtr<int> p2 = std::move(p1);
 
     Check(*p2 == 5, "p2 after move has field");
     Check(!p1, "p1 after move is empty");
 
-    smrt::SmrtPtr<int> empty;
-    smrt::SmrtPtr<int> move_empty = std::move(empty);
+    shrd::ShrdPtr<int> empty;
+    shrd::ShrdPtr<int> move_empty = std::move(empty);
     Check(!empty && !move_empty, "Move from the empty is empty");
 }
 
 
 void TestCopyAssignment()
 {
-    smrt::SmrtPtr<Point> point_empty;
-    smrt::SmrtPtr<Point> point1 = smrt::MakeSmrtPtr<Point>(19, -15);
+    shrd::ShrdPtr<Point> point_empty;
+    shrd::ShrdPtr<Point> point1 = shrd::MakeShrdPtr<Point>(19, -15);
     point_empty = point1;
     Check(point_empty->x_ == 19 && point_empty->y_ == -15, "Point after copy assignment isn't empty");
     point_empty->x_ = -10;
     Check(point1->x_ == -10 && point1->y_ == -15, "Point original was changed through the copy assignment");
 
-    smrt::SmrtPtr<Point> point2 = smrt::MakeSmrtPtr<Point>(4, 5);
+    shrd::ShrdPtr<Point> point2 = shrd::MakeShrdPtr<Point>(4, 5);
     point1 = point2;
     Check(point1->x_ == 4 && point1->y_ == 5, "Copy assignment from not-empty point");
 
-    smrt::SmrtPtr<Point> empty2;
+    shrd::ShrdPtr<Point> empty2;
     point1 = empty2;
     Check(!point1, "Copy assignment from empty is empty");
 
@@ -159,8 +159,8 @@ void TestCopyAssignment()
 
 void TestMoveAssignment()
 {
-    smrt::SmrtPtr<Point> p1 = smrt::MakeSmrtPtr<Point>(10, 20);
-    smrt::SmrtPtr<Point> p2;
+    shrd::ShrdPtr<Point> p1 = shrd::MakeShrdPtr<Point>(10, 20);
+    shrd::ShrdPtr<Point> p2;
     p2 = std::move(p1);
     
     Check(!p1, "p1 after move assignment is empty");
@@ -169,12 +169,12 @@ void TestMoveAssignment()
     p2 = std::move(p1);
     Check(!p2 && !p1, "Move assignment full from empty");
 
-    smrt::SmrtPtr<Point> empty_point;
+    shrd::ShrdPtr<Point> empty_point;
     empty_point = std::move(p2);
     Check(!p1 && !empty_point, "Move assignmnet empty from empty");
 
-    smrt::SmrtPtr<Point> p3 = smrt::MakeSmrtPtr<Point>(3, 1);
-    smrt::SmrtPtr<Point> p4 = smrt::MakeSmrtPtr<Point>(5, 4);
+    shrd::ShrdPtr<Point> p3 = shrd::MakeShrdPtr<Point>(3, 1);
+    shrd::ShrdPtr<Point> p4 = shrd::MakeShrdPtr<Point>(5, 4);
     p4 = std::move(p3);
     Check(p4->x_ == 3 && !p3, "Move assignment full from full");
 
@@ -184,22 +184,22 @@ void TestMoveAssignment()
 
 void TestUpcast()
 {
-    smrt::SmrtPtr<Circle> circle = smrt::MakeSmrtPtr<Circle>(2);
-    smrt::SmrtPtr<Shape> shape = circle;
+    shrd::ShrdPtr<Circle> circle = shrd::MakeShrdPtr<Circle>(2);
+    shrd::ShrdPtr<Shape> shape = circle;
     circle->square = 200;
     Check(shape->square == 200, "Upcast copy constructor");
 
-    smrt::SmrtPtr<Shape> shape1 = smrt::MakeSmrtPtr<Shape>(2);
+    shrd::ShrdPtr<Shape> shape1 = shrd::MakeShrdPtr<Shape>(2);
     shape1 = circle;
     circle->square = 100;
     Check(shape1->square == 100, "Upcast copy assignment");
     
-    smrt::SmrtPtr<Circle> circle1 = smrt::MakeSmrtPtr<Circle>(2);
+    shrd::ShrdPtr<Circle> circle1 = shrd::MakeShrdPtr<Circle>(2);
     int radius1 = circle1->radius;
     shape1 = std::move(circle1);
     Check(shape1->square == 3.14 * radius1 * radius1 && !circle1, "Upcast move assignment");
 
-    smrt::SmrtPtr<Shape> shape2 = std::move(circle);
+    shrd::ShrdPtr<Shape> shape2 = std::move(circle);
     Check(shape2->square == 100 && !circle, "Upcast move constructor");
 }
 

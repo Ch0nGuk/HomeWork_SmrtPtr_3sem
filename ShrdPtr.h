@@ -5,47 +5,47 @@
 #include <stdexcept>
 #include <concepts> // для std::derived_from
 
-namespace smrt
+namespace shrd
 {
-    template <class T, class... Args> SmrtPtr<T> MakeSmrtPtr(Args&&...);
+    template <class T, class... Args> ShrdPtr<T> MakeShrdPtr(Args&&...);
 
 
     template <class T>
-    class SmrtPtr
+    class ShrdPtr
     {
-    template <class U, class... Args>   friend SmrtPtr<U> MakeSmrtPtr(Args&&...);
-    template <class U> friend class SmrtPtr;
+    template <class U, class... Args>   friend ShrdPtr<U> MakeShrdPtr(Args&&...);
+    template <class U> friend class ShrdPtr;
     public:
-        SmrtPtr() : store_(), ptr_() {}
-        SmrtPtr(const SmrtPtr& other) noexcept : store_(other.store_), ptr_(other.ptr_) 
+        ShrdPtr() : store_(), ptr_() {}
+        ShrdPtr(const ShrdPtr& other) noexcept : store_(other.store_), ptr_(other.ptr_) 
         {
             if (store_ != nullptr) store_->IncCount();
         }
 
         template <class U> requires std::derived_from<U, T>
-        SmrtPtr(const SmrtPtr<U>& other) noexcept : store_(other.store_), ptr_(other.ptr_) 
+        ShrdPtr(const ShrdPtr<U>& other) noexcept : store_(other.store_), ptr_(other.ptr_) 
         {
             if (store_ != nullptr) store_->IncCount();
         }
 
-        SmrtPtr(SmrtPtr&& other) noexcept : store_(other.store_), ptr_(other.ptr_)
+        ShrdPtr(ShrdPtr&& other) noexcept : store_(other.store_), ptr_(other.ptr_)
         {
             other.store_ = nullptr;
             other.ptr_ = nullptr;
         }
 
         template <class U> requires std::derived_from<U, T>
-        SmrtPtr(SmrtPtr<U>&& other) noexcept : store_(other.store_), ptr_(other.ptr_)
+        ShrdPtr(ShrdPtr<U>&& other) noexcept : store_(other.store_), ptr_(other.ptr_)
         {
             other.store_ = nullptr;
             other.ptr_ = nullptr;
         }
 
-        SmrtPtr& operator=(const SmrtPtr& other)
+        ShrdPtr& operator=(const ShrdPtr& other)
         {
             if (this == &other) return *this;
 
-            SmrtPtr tmp_this = *this;
+            ShrdPtr tmp_this = *this;
             store_ = other.store_;
             ptr_ = other.ptr_;
             if (tmp_this.store_ != nullptr) tmp_this.store_->DecCount(); // уменьшаем счетчик у старого слота
@@ -55,9 +55,9 @@ namespace smrt
         }
 
         template <class U> requires std::derived_from<U, T>
-        SmrtPtr& operator=(const SmrtPtr<U>& other)
+        ShrdPtr& operator=(const ShrdPtr<U>& other)
         {
-            SmrtPtr tmp_this = *this;
+            ShrdPtr tmp_this = *this;
             store_ = other.store_;
             ptr_ = other.ptr_;
             if (tmp_this.store_ != nullptr) tmp_this.store_->DecCount(); // уменьшаем счетчик у старого слота
@@ -66,11 +66,11 @@ namespace smrt
             return *this;
         }
 
-        SmrtPtr& operator=(SmrtPtr&& other) noexcept
+        ShrdPtr& operator=(ShrdPtr&& other) noexcept
         {
             if (&other == this) return *this;
 
-            SmrtPtr tmp_this = *this;
+            ShrdPtr tmp_this = *this;
 
             store_ = other.store_;
             ptr_ = other.ptr_;
@@ -83,9 +83,9 @@ namespace smrt
         }
 
         template <class U> requires std::derived_from<U, T>
-        SmrtPtr& operator=(SmrtPtr<U>&& other) noexcept
+        ShrdPtr& operator=(ShrdPtr<U>&& other) noexcept
         {
-            SmrtPtr tmp_this = *this;
+            ShrdPtr tmp_this = *this;
 
             store_ = other.store_;
             ptr_ = other.ptr_;
@@ -96,20 +96,20 @@ namespace smrt
             return *this;
         }
 
-        ~SmrtPtr()
+        ~ShrdPtr()
         {
             if (store_ != nullptr) store_->DecCount();
         }
 
         T& operator*() const
         {
-            if (store_ == nullptr) throw std::logic_error("SmrtPtr is empty");
+            if (store_ == nullptr) throw std::logic_error("ShrdPtr is empty");
             return *ptr_;
         }
 
         T* operator->() const
         {
-            if (store_ == nullptr) throw std::logic_error("SmrtPtr is empty");
+            if (store_ == nullptr) throw std::logic_error("ShrdPtr is empty");
             return ptr_;
         }
 
@@ -123,14 +123,14 @@ namespace smrt
         detail::Storage* store_;
         T* ptr_;
         
-        SmrtPtr(detail::Storage* new_store, T* new_ptr) noexcept : store_(new_store), ptr_(new_ptr) {}
+        ShrdPtr(detail::Storage* new_store, T* new_ptr) noexcept : store_(new_store), ptr_(new_ptr) {}
     };
 
     template <class T, class... Args>
-    SmrtPtr<T> MakeSmrtPtr(Args&&... args)
+    ShrdPtr<T> MakeShrdPtr(Args&&... args)
     {
         detail::Block<T>* block = new detail::Block<T>(std::forward<Args>(args)...);
 
-        return SmrtPtr<T>(block, &(block->object));
+        return ShrdPtr<T>(block, &(block->object));
     }
-} // namespace smrt
+} // namespace shrd
