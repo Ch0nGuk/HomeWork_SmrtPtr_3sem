@@ -129,9 +129,8 @@ namespace smrt
     template <class T, class... Args>
     SmrtPtr<T> MakeSmrtPtr(Args&&... args)
     {
-        T* ptr = new T(std::forward<Args>(args)...);
-        detail::Storage* store = new detail::Storage(ptr, detail::delete_object<T>);
+        detail::Block<T>* block = new detail::Block<T>(std::forward<Args>(args)...);
 
-        return SmrtPtr<T>(store, ptr);
+        return SmrtPtr<T>(block, &(block->object));
     }
 } // namespace smrt

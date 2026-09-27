@@ -51,7 +51,6 @@ struct Circle : public Shape
 };
 
 
-
 void TestCreate()
 {
     smrt::SmrtPtr<Point> p1 = smrt::MakeSmrtPtr<Point>(1, 2);
@@ -205,7 +204,7 @@ void TestUpcast()
 }
 
 
-int main()
+void AllTests()
 {
     TestCreate();
     TestNullptr();
