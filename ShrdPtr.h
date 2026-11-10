@@ -8,6 +8,7 @@
 namespace shrd
 {
     template <class T, class... Args> ShrdPtr<T> MakeShrdPtr(Args&&...);
+    template <class T> ShrdPtr<T[]> MakeShrdArray(size_t size);
 
 
     template <class T>
@@ -126,11 +127,90 @@ namespace shrd
         ShrdPtr(detail::ControlBlock* new_control_block, T* new_ptr) noexcept : control_block_(new_control_block), ptr_(new_ptr) {}
     };
 
+    template <class T>
+    class ShrdPtr<T[]>
+    {
+    template <class U> friend ShrdPtr<U[]> MakeShrdArray(size_t size);
+    public:
+        ShrdPtr() : control_block_(), ptr_() {}
+
+        ShrdPtr(const ShrdPtr& other) noexcept : control_block_(other.control_block_), ptr_(other.ptr_)
+        {
+            if (control_block_ != nullptr) control_block_->IncCount();
+        }
+
+        ShrdPtr(ShrdPtr&& other) noexcept : control_block_(other.control_block_), ptr_(other.ptr_)
+        {
+            other.control_block_ = nullptr;
+            other.ptr_ = nullptr;
+        }
+
+        ShrdPtr& operator=(const ShrdPtr& other) noexcept
+        {
+            if (this == &other) return *this;
+
+            detail::ControlBlock* new_control_block = other.control_block_;
+            T* new_ptr = other.ptr_;
+            if (new_control_block != nullptr) new_control_block->IncCount();
+
+            detail::ControlBlock* old_control_block = control_block_;
+            control_block_ = new_control_block;
+            ptr_ = new_ptr;
+            if (old_control_block != nullptr) old_control_block->DecCount();
+
+            return *this;
+        }
+
+        ShrdPtr& operator=(ShrdPtr&& other) noexcept
+        {
+            if (this == &other) return *this;
+
+            detail::ControlBlock* old_control_block = control_block_;
+            control_block_ = other.control_block_;
+            ptr_ = other.ptr_;
+            other.control_block_ = nullptr;
+            other.ptr_ = nullptr;
+            if (old_control_block != nullptr) old_control_block->DecCount();
+
+            return *this;
+        }
+
+        ~ShrdPtr()
+        {
+            if (control_block_ != nullptr) control_block_->DecCount();
+        }
+
+        T& operator[](size_t index) const
+        {
+            if (control_block_ == nullptr) throw std::logic_error("ShrdPtr is empty");
+            return ptr_[index];
+        }
+
+        explicit operator bool() const noexcept
+        {
+            return control_block_ != nullptr;
+        }
+
+    private:
+        detail::ControlBlock* control_block_;
+        T* ptr_;
+
+        ShrdPtr(detail::ControlBlock* new_control_block, T* new_ptr) noexcept : control_block_(new_control_block), ptr_(new_ptr) {}
+    };
+
     template <class T, class... Args>
     ShrdPtr<T> MakeShrdPtr(Args&&... args)
     {
         detail::BlockWithObject<T>* block = new detail::BlockWithObject<T>(std::forward<Args>(args)...);
 
         return ShrdPtr<T>(block, &(block->object));
+    }
+
+    template <class T>
+    ShrdPtr<T[]> MakeShrdArray(size_t size)
+    {
+        detail::BlockWithArray<T>* block = new detail::BlockWithArray<T>(size);
+
+        return ShrdPtr<T[]>(block, block->array);
     }
 } // namespace shrd

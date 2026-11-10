@@ -48,4 +48,21 @@ namespace shrd::detail
         T object;
     };
 
+    template <class T> struct BlockWithArray;
+
+    template <class T>
+    void delete_array_block(ControlBlock* control_block)
+    {
+        delete static_cast<BlockWithArray<T>*>(control_block);
+    }
+
+    template <class T>
+    struct BlockWithArray : ControlBlock
+    {
+        BlockWithArray(size_t size) : ControlBlock(delete_array_block<T>), array(new T[size]()) {}
+        ~BlockWithArray() { delete[] array; }
+
+        T* array;
+    };
+
 } // namespace shrd::detil

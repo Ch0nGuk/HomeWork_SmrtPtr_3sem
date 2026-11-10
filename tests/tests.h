@@ -8,4 +8,5 @@ void TestMove();
 void TestCopyAssignment();
 void TestMoveAssignment();
 void TestUpcast();
-void AllTests();
+void TestArray();
+int AllTests();

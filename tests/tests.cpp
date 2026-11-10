@@ -1,4 +1,5 @@
 #include <iostream>
+#include <type_traits>
 #include <utility> // для std::move
 
 #include "ShrdPtr.h"
@@ -49,6 +50,14 @@ struct Circle : public Shape
     Circle() : Shape(), radius() {}
     int radius;
 };
+
+struct ArrayItem
+{
+    static int destroyed;
+    ~ArrayItem() { destroyed++; }
+};
+
+int ArrayItem::destroyed = 0;
 
 
 void TestCreate()
@@ -203,8 +212,58 @@ void TestUpcast()
     Check(shape2->square == 100 && !circle, "Upcast move constructor");
 }
 
+void TestArray()
+{
+    shrd::ShrdPtr<int[]> empty;
+    Check(!empty, "Empty array");
 
-void AllTests()
+    bool caught = false;
+    try
+    {
+        empty[0] = 1;
+    }
+    catch (const std::logic_error&)
+    {
+        caught = true;
+    }
+    Check(caught, "Empty array indexing throws");
+
+    shrd::ShrdPtr<int[]> numbers = shrd::MakeShrdArray<int>(3);
+    Check(numbers[0] == 0 && numbers[2] == 0, "Array elements are initialized");
+    numbers[1] = 7;
+
+    shrd::ShrdPtr<int[]> copy = numbers;
+    Check(copy[1] == 7, "Array copy sees the same elements");
+    copy[1] = 9;
+    Check(numbers[1] == 9, "Array changes are shared");
+
+    shrd::ShrdPtr<int[]> assigned = shrd::MakeShrdArray<int>(1);
+    assigned = copy;
+    Check(assigned[1] == 9, "Array copy assignment");
+
+    shrd::ShrdPtr<int[]> moved = std::move(copy);
+    Check(!copy && moved[1] == 9, "Array move constructor");
+    assigned = std::move(moved);
+    Check(!moved && assigned[1] == 9, "Array move assignment");
+
+    assigned = assigned;
+    Check(assigned[1] == 9, "Array self copy assignment");
+
+    Check(!std::is_constructible_v<shrd::ShrdPtr<Shape[]>, shrd::ShrdPtr<Circle[]>>, "Array upcast is forbidden");
+
+    int before = ArrayItem::destroyed;
+    {
+        shrd::ShrdPtr<ArrayItem[]> items = shrd::MakeShrdArray<ArrayItem>(3);
+        {
+            shrd::ShrdPtr<ArrayItem[]> items_copy = items;
+        }
+        Check(ArrayItem::destroyed == before, "Shared array is still alive");
+    }
+    Check(ArrayItem::destroyed == before + 3, "All array elements are destroyed once");
+}
+
+
+int AllTests()
 {
     TestCreate();
     TestNullptr();
@@ -213,4 +272,6 @@ void AllTests()
     TestCopyAssignment();
     TestMoveAssignment();
     TestUpcast();
+    TestArray();
+    return failed;
 }
